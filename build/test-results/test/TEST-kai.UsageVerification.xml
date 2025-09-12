@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.UsageVerification" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.556Z" hostname="Perrys-Mac-Studio.local" time="0.016">
+  <properties/>
+  <testcase name="verify Kai library usage patterns" classname="kai.UsageVerification" time="0.016"/>
+  <system-out><![CDATA[
+]]>&#x1f50d;<![CDATA[ Kai Library Usage Verification
+========================================
+✅ Pattern 1: Basic agent creation
+✅ Pattern 2: Agent with tools
+✅ Pattern 3: Agent.chat() returns text + usage metadata
+✅ Pattern 4: Agent.reply() extension function
+✅ Pattern 5: In-memory conversation memory
+✅ Pattern 6: Remember functionality
+✅ Pattern 7: Built-in tools (time.now)
+✅ Pattern 8: Custom tool creation
+✅ Pattern 9: LM Studio client
+✅ Pattern 10: Memory store interface
+========================================
+]]>&#x1f3af;<![CDATA[ All usage patterns verified!
+]]>&#x1f4cb;<![CDATA[ Library meets all specified requirements:
+   ✓ Minimal public surface
+   ✓ Single LlmClient interface
+   ✓ Agent.chat() Just Works™
+   ✓ In-memory conversation memory
+   ✓ Tools interface (OpenAI-style)
+   ✓ Zero ceremony, few dependencies
+   ✓ Compile-ready
+========================================
+]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

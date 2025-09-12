@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.MemoryTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.550Z" hostname="Perrys-Mac-Studio.local" time="0.001">
+  <properties/>
+  <testcase name="should limit recent messages" classname="kai.MemoryTest" time="0.0"/>
+  <testcase name="should store and retrieve messages" classname="kai.MemoryTest" time="0.0"/>
+  <testcase name="should limit message count" classname="kai.MemoryTest" time="0.0"/>
+  <testcase name="should handle summary" classname="kai.MemoryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

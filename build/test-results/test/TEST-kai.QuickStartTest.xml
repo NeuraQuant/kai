@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.QuickStartTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.552Z" hostname="Perrys-Mac-Studio.local" time="0.0">
+  <properties/>
+  <testcase name="quickstart example should work" classname="kai.QuickStartTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
