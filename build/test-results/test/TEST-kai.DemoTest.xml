@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.DemoTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.532Z" hostname="Perrys-Mac-Studio.local" time="0.014">
+  <properties/>
+  <testcase name="demonstrate complete Kai library usage" classname="kai.DemoTest" time="0.014"/>
+  <system-out><![CDATA[]]>&#x1f680;<![CDATA[ Kai Library Demonstration
+==================================================
+✅ Created mock LM Studio client
+✅ Created agent: demo-agent
+✅ Chat response: Hello! I'm a test assistant. How can I help you?
+✅ Memory contains 2 messages
+✅ Added 2 tools to agent
+✅ Tool-enabled response: You asked me what my name is. I'm a test assistant.
+✅ Remembered note: true
+✅ Reply extension: The current time is 2024-01-01T12:00:00Z
+✅ Memory limit working: 3 messages (max 3)
+✅ Time tool result: 2025-09-12T17:11:26....
+✅ Custom tool result: 5 + 3 = 8.0
+✅ Agent context scratch: value
+✅ Usage tracking: Usage(promptTokens=55, completionTokens=9, totalTokens=64)
+==================================================
+]]>&#x1f389;<![CDATA[ All Kai library features demonstrated successfully!
+]]>&#x1f4ca;<![CDATA[ Test Summary:
+   - Agent creation and configuration ✅
+   - Chat functionality ✅
+   - Memory management ✅
+   - Tool integration ✅
+   - Built-in tools (time.now, http.get) ✅
+   - Custom tool creation ✅
+   - Remember functionality ✅
+   - Reply extension function ✅
+   - Memory limits ✅
+   - Agent context ✅
+   - Usage tracking ✅
+==================================================
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

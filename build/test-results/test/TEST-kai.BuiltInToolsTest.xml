@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.BuiltInToolsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.514Z" hostname="Perrys-Mac-Studio.local" time="0.018">
+  <properties/>
+  <testcase name="http get tool should reject invalid json" classname="kai.BuiltInToolsTest" time="0.009"/>
+  <testcase name="http get tool should require url parameter" classname="kai.BuiltInToolsTest" time="0.003"/>
+  <testcase name="tool helper should create valid tool spec" classname="kai.BuiltInToolsTest" time="0.001"/>
+  <testcase name="time now tool should return valid ISO timestamp" classname="kai.BuiltInToolsTest" time="0.004"/>
+  <testcase name="http get tool should reject non-http urls" classname="kai.BuiltInToolsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

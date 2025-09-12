@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kai.ToolsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.553Z" hostname="Perrys-Mac-Studio.local" time="0.002">
+  <properties/>
+  <testcase name="time now tool should return current time" classname="kai.ToolsTest" time="0.001"/>
+  <testcase name="http get tool should require url parameter" classname="kai.ToolsTest" time="0.0"/>
+  <testcase name="http get tool should reject non-http urls" classname="kai.ToolsTest" time="0.001"/>
+  <testcase name="tool helper should create tool spec" classname="kai.ToolsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
