@@ -43,20 +43,12 @@ publishing {
             pom {
                 name.set("Kai")
                 description.set("Lightweight utility library for structuring and managing Agentic AI agents")
-                url.set("https://github.com/yourusername/kai")
+                url.set("https://github.com/NeuraQuant/kai")
                 
                 licenses {
                     license {
                         name.set("MIT License")
                         url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                
-                developers {
-                    developer {
-                        id.set("kai")
-                        name.set("Kai Developer")
-                        email.set("developer@kai.io")
                     }
                 }
             }
