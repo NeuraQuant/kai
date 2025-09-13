@@ -451,19 +451,6 @@ kai/
 - **Extensible**: Easy to add custom clients, tools, and behaviors
 - **Lightweight**: Minimal dependencies, fast compilation
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit pull requests.
-
 ## License
 
 MIT License - see LICENSE file for details
-
-## Future Enhancements
-
-- Streaming response support
-- Advanced tool calling with JSON schema
-- Conversation branching and rollback
-- Built-in RAG (Retrieval-Augmented Generation) support
-- More LLM provider integrations
-- Async/coroutine support for concurrent operations
