@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="kai.IntegrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-09-12T23:11:26.547Z" hostname="Perrys-Mac-Studio.local" time="0.003">
-  <properties/>
-  <testcase name="agent should handle multiple tools" classname="kai.IntegrationTest" time="0.001"/>
-  <testcase name="agent should work end-to-end with mock LM Studio" classname="kai.IntegrationTest" time="0.001"/>
-  <testcase name="agent should handle memory limits" classname="kai.IntegrationTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
