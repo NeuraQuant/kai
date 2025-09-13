@@ -1,287 +1,469 @@
-# Kai - Kotlin Agentic Interface
+# Kai - Lightweight Agentic AI Library for Kotlin
 
-A minimal, elegant Kotlin library for defining and running Agentic AI agents. Built for simplicity, readability, and conciseness with a clean public API.
+Kai is a minimal, elegant library for building and managing AI agents in Kotlin. It prioritizes simplicity, readability, and ease of use while providing powerful features for agent-based AI applications.
 
 ## Features
 
-- **Minimal API**: Clean, simple interface with ergonomic defaults
-- **LM Studio Support**: Built-in client for LM Studio with OpenAI-compatible API
-- **Tool System**: OpenAI-style function calling with built-in tools
-- **Memory Management**: In-memory conversation history with configurable limits
-- **Zero Ceremony**: Just Works™ out of the box
-- **Framework Agnostic**: Works great in Micronaut, Spring, or standalone
+- **Simple Setup**: One-liner agent creation and chat
+- **Memory Management**: Automatic conversation context persistence
+- **Tool Integration**: Extensible tool system for agent capabilities
+- **Multiple LLM Support**: Built-in support for LM Studio and OpenAI
+- **Minimal Dependencies**: Only uses kotlinx.serialization
+- **Kotlin-First**: Leverages Kotlin idioms for clean, concise code
+
+## Installation
+
+### Gradle (Kotlin DSL)
+
+```kotlin
+dependencies {
+    implementation("io.kai:kai:1.0.0")
+}
+```
+
+### Gradle (Groovy)
+
+```groovy
+dependencies {
+    implementation 'io.kai:kai:1.0.0'
+}
+```
+
+### Building from Source
+
+```bash
+git clone https://github.com/yourusername/kai.git
+cd kai
+./gradlew build
+./gradlew publishToMavenLocal
+```
 
 ## Quick Start
 
-### 1. Add Dependencies
+### Basic Usage
 
 ```kotlin
-// build.gradle.kts
-dependencies {
-    implementation("io.ktor:ktor-client-core:2.3.7")
-    implementation("io.ktor:ktor-client-java:2.3.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-}
-```
+import kai.agent.Agent
+import kai.client.LmStudioClient
 
-### 2. Start LM Studio
-
-1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Load a model (e.g., "lmstudio-community/qwen2.5-7b-instruct")
-3. Start the local server (runs on `http://localhost:1234`)
-
-### 3. Basic Usage
-
-```kotlin
-import kai.*
-
-suspend fun main() {
-    val agent = Agent(
-        name = "kai",
-        system = "Be concise and correct.",
-        llm = LmStudioClient(model = "lmstudio-community/qwen2.5-7b-instruct")
-    ).use(timeNowTool)
-
-    val text = agent.reply("What time is it?")
-    println(text)
-}
-```
-
-### 4. Advanced Usage
-
-```kotlin
-import kai.*
-
-suspend fun main() {
-    // Create agent with custom configuration
-    val agent = Agent(
-        name = "assistant",
-        system = "You are a helpful coding assistant.",
-        llm = LmStudioClient(
-            model = "lmstudio-community/qwen2.5-7b-instruct",
-            baseUrl = "http://localhost:1234/v1",
-            apiKey = null // Optional
-        ),
-        memory = InMemoryMemory(maxMessages = 50)
-    ).use(
-        timeNowTool,
-        httpGetTool,
-        tool(
-            name = "calculator",
-            description = "Perform basic math operations",
-            schema = """{"type":"object","properties":{"operation":{"type":"string"},"a":{"type":"number"},"b":{"type":"number"}},"required":["operation","a","b"]}"""
-        ) { args, _ ->
-            val json = Json.parseToJsonElement(args).jsonObject
-            val operation = json["operation"]?.jsonPrimitive?.content ?: "add"
-            val a = json["a"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
-            val b = json["b"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
-            
-            when (operation) {
-                "add" -> (a + b).toString()
-                "multiply" -> (a * b).toString()
-                else -> "Unknown operation"
-            }
-        }
-    )
-
+fun main() {
+    // Create agent with LM Studio (assumes LM Studio running on localhost:1234)
+    val agent = Agent(LmStudioClient())
+    
     // Chat with the agent
-    val result = agent.chat("What's 5 + 3?")
-    println(result.text)
-    println("Tokens used: ${result.usage?.totalTokens}")
-
-    // Remember something for the agent
-    agent.remember("User prefers detailed explanations")
-
-    // Continue conversation
-    val followUp = agent.reply("Can you explain how you calculated that?")
-    println(followUp)
+    val response = agent.chat("Hello! What can you help me with?")
+    println(response)
 }
 ```
 
-## API Reference
-
-### Core Classes
-
-#### `Agent`
-The main class for creating and managing AI agents.
+### With System Prompt
 
 ```kotlin
-class Agent(
-    val name: String = "agent",
-    val system: String = "You are a helpful assistant.",
-    val llm: LlmClient,
-    val memory: MemoryStore = InMemoryMemory(),
-    val tools: MutableList<ToolSpec> = mutableListOf()
+val agent = Agent(
+    llmClient = LmStudioClient(),
+    systemPrompt = "You are a helpful coding assistant specializing in Kotlin."
+)
+
+val response = agent.chat("How do I create a data class?")
+println(response)
+```
+
+### Using Tools
+
+```kotlin
+import kai.tool.CalculatorTool
+import kai.tool.DateTimeTool
+
+val agent = Agent(
+    llmClient = LmStudioClient(),
+    systemPrompt = "You are a helpful assistant with access to tools.",
+    tools = listOf(CalculatorTool(), DateTimeTool())
+)
+
+// Direct tool execution
+val result = agent.executeTool("calculator", "2 + 2")
+println(result) // Result: 4.0
+
+// Or let the agent decide when to use tools
+val response = agent.chat("What's 15 * 7?")
+```
+
+### Memory Management
+
+```kotlin
+val agent = Agent(LmStudioClient())
+
+// Have a conversation
+agent.chat("My name is Alice")
+agent.chat("I like programming in Kotlin")
+
+// The agent remembers context
+val response = agent.chat("What's my name and what do I like?")
+// Response will reference Alice and Kotlin programming
+
+// View conversation history
+println(agent.getHistory())
+
+// Clear memory when needed
+agent.clearMemory()
+```
+
+### Using the Fluent Builder
+
+```kotlin
+import kai.agent.agent
+import kai.tool.CalculatorTool
+import kai.tool.WebSearchTool
+
+val myAgent = agent {
+    withClient(LmStudioClient("http://localhost:1234"))
+    withSystemPrompt("You are a research assistant.")
+    withTool(CalculatorTool())
+    withTool(WebSearchTool())
+}
+
+val response = myAgent.chat("What's the square root of 144?")
+```
+
+### Custom LLM Client
+
+```kotlin
+import kai.client.LlmClient
+import kai.model.Message
+import kai.model.Response
+
+class CustomLlmClient : LlmClient {
+    override fun chat(
+        messages: List<Message>,
+        temperature: Double,
+        maxTokens: Int
+    ): Response {
+        // Your custom implementation
+        return Response("Custom response", null)
+    }
+}
+
+val agent = Agent(CustomLlmClient())
+```
+
+### Creating Custom Tools
+
+```kotlin
+import kai.tool.Tool
+
+class CodeExecutorTool : Tool {
+    override val name = "code_executor"
+    override val description = "Executes Kotlin code snippets"
+    
+    override fun execute(input: String): String {
+        // Implementation for code execution
+        return "Code executed successfully"
+    }
+}
+
+val agent = Agent(
+    llmClient = LmStudioClient(),
+    tools = listOf(CodeExecutorTool())
 )
 ```
 
-**Methods:**
-- `chat(message: String, params: GenParams = GenParams()): LlmResult`
-- `use(vararg tool: ToolSpec): Agent`
-- `remember(note: String)`
-
-#### `LmStudioClient`
-Built-in client for LM Studio with OpenAI-compatible API.
+### Integration with Micronaut
 
 ```kotlin
-class LmStudioClient(
-    private val model: String,
-    private val baseUrl: String = "http://localhost:1234/v1",
-    private val apiKey: String? = null,
-    private val http: HttpClient = defaultHttp()
-) : LlmClient
-```
+import io.micronaut.context.annotation.Bean
+import io.micronaut.context.annotation.Factory
+import jakarta.inject.Singleton
+import kai.agent.Agent
+import kai.client.LmStudioClient
 
-#### `MemoryStore` & `InMemoryMemory`
-In-memory conversation history with configurable limits.
-
-```kotlin
-interface MemoryStore {
-    fun add(msg: Msg)
-    fun recent(limit: Int = 20): List<Msg>
-    var summary: String?
-}
-
-class InMemoryMemory(private val maxMessages: Int = 20) : MemoryStore
-```
-
-### Built-in Tools
-
-#### `timeNowTool`
-Returns the current ISO-8601 timestamp.
-
-```kotlin
-val timeNowTool: ToolSpec
-```
-
-#### `httpGetTool`
-Makes safe GET requests with URL validation and 8KB response limit.
-
-```kotlin
-val httpGetTool: ToolSpec
-```
-
-### Extension Functions
-
-#### `Agent.reply(user: String): String`
-Convenient wrapper for `chat().text`.
-
-```kotlin
-suspend fun Agent.reply(user: String): String = chat(user).text
-```
-
-### Data Classes
-
-#### `Msg`
-Represents a message in the conversation.
-
-```kotlin
-data class Msg(
-    val role: Role,
-    val content: String
-) {
-    enum class Role { System, User, Assistant, Tool }
-}
-```
-
-#### `LlmResult`
-Response from the LLM with usage information.
-
-```kotlin
-data class LlmResult(
-    val text: String,
-    val usage: Usage? = null,
-    val raw: String? = null
-) {
-    data class Usage(
-        val promptTokens: Int?,
-        val completionTokens: Int?,
-        val totalTokens: Int?
-    )
-}
-```
-
-## Creating Custom Tools
-
-Use the `tool()` helper function to create custom tools:
-
-```kotlin
-val customTool = tool(
-    name = "my.tool",
-    description = "Description of what the tool does",
-    schema = """{"type":"object","properties":{"param":{"type":"string"}},"required":["param"]}"""
-) { argsJson, context ->
-    // Parse arguments
-    val args = Json.parseToJsonElement(argsJson).jsonObject
-    val param = args["param"]?.jsonPrimitive?.content ?: ""
+@Factory
+class AgentFactory {
     
-    // Perform tool logic
-    "Tool result: $param"
+    @Bean
+    @Singleton
+    fun agent(): Agent {
+        return Agent(
+            llmClient = LmStudioClient(),
+            systemPrompt = "You are a helpful API assistant."
+        )
+    }
+}
+
+// In your service
+@Singleton
+class ChatService(private val agent: Agent) {
+    
+    fun processUserQuery(query: String): String {
+        return agent.chat(query)
+    }
 }
 ```
 
-## Testing
+### Configuration Properties
 
-The library includes comprehensive tests. Run them with:
+When using Kai with dependency injection frameworks like Micronaut, you can configure the library using application properties. The following properties are supported:
+
+#### LM Studio Configuration
+
+| Property | Description | Default Value | Required |
+|----------|-------------|---------------|----------|
+| `kai.lmstudio.url` | Base URL for LM Studio server | `http://localhost:1234` | No |
+| `kai.lmstudio.model` | Specific model to use (optional) | None | No |
+
+**Example configuration in `application.yml`:**
+
+```yaml
+kai:
+  lmstudio:
+    url: http://localhost:1234
+    model: qwen2.5-coder-7b
+```
+
+**Example configuration in `application.properties`:**
+
+```properties
+kai.lmstudio.url=http://localhost:1234
+kai.lmstudio.model=qwen2.5-coder-7b
+```
+
+#### OpenAI Configuration
+
+| Property | Description | Default Value | Required |
+|----------|-------------|---------------|----------|
+| `kai.openai.api-key` | OpenAI API key | None | Yes (when using OpenAI) |
+| `kai.openai.model` | OpenAI model to use | `gpt-4` | No |
+
+**Example configuration in `application.yml`:**
+
+```yaml
+kai:
+  openai:
+    api-key: ${OPENAI_API_KEY}
+    model: gpt-4-turbo-preview
+```
+
+**Example configuration in `application.properties`:**
+
+```properties
+kai.openai.api-key=${OPENAI_API_KEY}
+kai.openai.model=gpt-4-turbo-preview
+```
+
+**Using @Value annotations in your code:**
+
+```kotlin
+import io.micronaut.context.annotation.Bean
+import io.micronaut.context.annotation.Factory
+import io.micronaut.context.annotation.Value
+import jakarta.inject.Singleton
+
+@Factory
+class AgentFactory {
+    
+    @Bean
+    @Singleton
+    fun lmStudioAgent(
+        @Value("\${kai.lmstudio.url:http://localhost:1234}") baseUrl: String,
+        @Value("\${kai.lmstudio.model:}") model: String?
+    ): Agent {
+        val client = if (model.isNullOrEmpty()) {
+            LmStudioClient(baseUrl)
+        } else {
+            LmStudioClient(baseUrl, model)
+        }
+        return Agent(client)
+    }
+    
+    @Bean
+    @Singleton
+    fun openAIAgent(
+        @Value("\${kai.openai.api-key}") apiKey: String,
+        @Value("\${kai.openai.model:gpt-4}") model: String
+    ): Agent {
+        return Agent(OpenAIClient(apiKey, model))
+    }
+}
+```
+
+**Environment Variables:**
+
+For security, it's recommended to use environment variables for sensitive data like API keys:
 
 ```bash
-./gradlew test
+export OPENAI_API_KEY="your-api-key-here"
 ```
 
-## Requirements
+Then reference them in your configuration:
 
-- **Kotlin**: 1.9.21+
-- **Java**: 17+
-- **Dependencies**: ktor-client-core, ktor-client-java, kotlinx-serialization-json, kotlinx-coroutines
+```yaml
+kai:
+  openai:
+    api-key: ${OPENAI_API_KEY}
+```
 
-## Configuration
+### Advanced Configuration
 
-### LM Studio Setup
+```kotlin
+// Configure LM Studio with specific model
+val lmStudioClient = LmStudioClient(
+    baseUrl = "http://localhost:1234",
+    model = "qwen2.5-coder-7b"
+)
 
-1. **Default Configuration**: Works with LM Studio defaults (`http://localhost:1234/v1`)
-2. **Custom Base URL**: Specify different endpoint if needed
-3. **API Key**: Optional authentication (set to `null` for no auth)
+// List available models
+val models = lmStudioClient.listModels()
+println("Available models: $models")
 
-### Memory Configuration
+// Create agent with custom parameters
+val agent = Agent(lmStudioClient)
 
-- **Default Limit**: 20 messages
-- **Custom Limit**: Set `maxMessages` in `InMemoryMemory`
-- **Summary Support**: Use `memory.summary` for conversation summaries
+// Chat with custom temperature and token limit
+val response = agent.chat(
+    message = "Write a haiku about programming",
+    temperature = 0.9,  // More creative
+    maxTokens = 100     // Limit response length
+)
+```
 
-## Error Handling
+### OpenAI Integration
 
-The library includes built-in error handling:
+```kotlin
+import kai.client.OpenAIClient
 
-- **Retry Logic**: Automatic retry on 429/5xx errors (max 2 retries)
-- **Tool Errors**: Tool execution errors are caught and returned as tool messages
-- **Network Timeouts**: 30-second timeout for HTTP requests
+val openAIClient = OpenAIClient(
+    apiKey = System.getenv("OPENAI_API_KEY"),
+    model = "gpt-4"
+)
 
-## License
+val agent = Agent(
+    llmClient = openAIClient,
+    systemPrompt = "You are GPT-4, a powerful language model."
+)
 
-MIT License - see LICENSE file for details.
+val response = agent.chat("Explain quantum computing")
+```
+
+## Direct Property Access
+
+Kai favors direct property access for simplicity:
+
+```kotlin
+val agent = Agent(LmStudioClient())
+
+// Directly modify system prompt
+agent.systemPrompt = "You are now a poetry expert."
+
+// Directly access and modify memory
+agent.memory.add(Message("user", "Remember this important fact"))
+agent.memory.removeAt(0)
+
+// Access tools list
+val toolNames = agent.tools.map { it.name }
+```
+
+## Example: Building an Agentic Coding Assistant
+
+```kotlin
+import kai.agent.Agent
+import kai.client.LmStudioClient
+import kai.tool.Tool
+
+// Custom tool for file operations
+class FileReaderTool : Tool {
+    override val name = "read_file"
+    override val description = "Reads content from a file"
+    
+    override fun execute(input: String): String {
+        return try {
+            java.io.File(input).readText()
+        } catch (e: Exception) {
+            "Error reading file: ${e.message}"
+        }
+    }
+}
+
+fun main() {
+    val codingAgent = Agent(
+        llmClient = LmStudioClient(),
+        systemPrompt = """
+            You are an expert Kotlin developer.
+            Help users with code reviews, refactoring, and best practices.
+            When analyzing code, be thorough but concise.
+        """.trimIndent(),
+        tools = listOf(FileReaderTool(), CalculatorTool())
+    )
+    
+    // Analyze a file
+    codingAgent.chat("Read and analyze the file at src/Main.kt")
+    
+    // Get suggestions
+    val suggestions = codingAgent.chat("What improvements would you suggest?")
+    println(suggestions)
+}
+```
+
+## Testing with LM Studio
+
+1. Download and install [LM Studio](https://lmstudio.ai/)
+2. Load a model (e.g., Qwen 2.5 Coder, Granite Code)
+3. Start the local server (usually on port 1234)
+4. Run your Kai agent:
+
+```kotlin
+fun main() {
+    val client = LmStudioClient("http://localhost:1234")
+    
+    // Check available models
+    println("Models: ${client.listModels()}")
+    
+    // Create and test agent
+    val agent = Agent(client)
+    println(agent.chat("Hello!"))
+}
+```
+
+## Architecture
+
+```
+kai/
+├── agent/
+│   ├── Agent.kt          # Core agent class
+│   └── AgentBuilder.kt   # Fluent builder pattern
+├── client/
+│   ├── LlmClient.kt      # Client interface
+│   ├── LmStudioClient.kt # LM Studio implementation
+│   └── OpenAIClient.kt   # OpenAI implementation
+├── model/
+│   ├── Message.kt        # Message data class
+│   └── Response.kt       # Response data class
+└── tool/
+    ├── Tool.kt           # Tool interface
+    ├── CalculatorTool.kt # Math evaluator
+    ├── DateTimeTool.kt   # Date/time tool
+    └── WebSearchTool.kt  # Web search stub
+```
+
+## Design Principles
+
+- **Simplicity First**: Direct property access, minimal configuration
+- **Elegant APIs**: Kotlin idioms, default parameters, extension functions
+- **Zero Boilerplate**: No unnecessary abstractions or config classes
+- **Extensible**: Easy to add custom clients, tools, and behaviors
+- **Lightweight**: Minimal dependencies, fast compilation
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
+Contributions are welcome! Please feel free to submit pull requests.
 
-- Code compiles with `-Xexplicit-api=strict`
-- All tests pass
-- Public API remains minimal
-- Documentation is updated
+## License
 
-## Troubleshooting
+MIT License - see LICENSE file for details
 
-### Common Issues
+## Future Enhancements
 
-1. **Connection Refused**: Ensure LM Studio is running on `localhost:1234`
-2. **Model Not Found**: Verify the model name matches what's loaded in LM Studio
-3. **Tool Errors**: Check tool JSON schema and argument parsing
-
-### Debug Mode
-
-Enable debug logging by setting system properties:
-
-```bash
--Dktor.logging.level=DEBUG
-```
+- Streaming response support
+- Advanced tool calling with JSON schema
+- Conversation branching and rollback
+- Built-in RAG (Retrieval-Augmented Generation) support
+- More LLM provider integrations
+- Async/coroutine support for concurrent operations
