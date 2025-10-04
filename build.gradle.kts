@@ -4,9 +4,11 @@ plugins {
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.serialization") version "1.9.22"
     `maven-publish`
+    signing
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
-group = "io.kai"
+group = "io.github.neuraquant"
 version = "1.0.0"
 
 repositories {
@@ -51,14 +53,39 @@ publishing {
                         url.set("https://opensource.org/licenses/MIT")
                     }
                 }
+                
+                developers {
+                    developer {
+                        id.set("neuraquant")
+                        name.set("NeuraQuant")
+                        email.set("contact@neuraquant.io")
+                    }
+                }
+                
+                scm {
+                    connection.set("scm:git:git://github.com/NeuraQuant/kai.git")
+                    developerConnection.set("scm:git:ssh://github.com:NeuraQuant/kai.git")
+                    url.set("https://github.com/NeuraQuant/kai")
+                }
             }
         }
     }
-    
+}
+
+nexusPublishing {
     repositories {
-        maven {
-            name = "local"
-            url = uri(layout.buildDirectory.dir("repo"))
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(project.findProperty("sonatypeUsername") as String?)
+            password.set(project.findProperty("sonatypePassword") as String?)
         }
     }
+}
+
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(publishing.publications["maven"])
 }
