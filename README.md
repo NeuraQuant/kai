@@ -13,11 +13,13 @@ Kai is a minimal, elegant library for building and managing AI agents in Kotlin.
 
 ## Installation
 
+Kai is published to Maven Central and can be added to your project using standard dependency management.
+
 ### Gradle (Kotlin DSL)
 
 ```kotlin
 dependencies {
-    implementation("io.kai:kai:1.0.0")
+    implementation("io.github.neuraquant:kai:1.0.0")
 }
 ```
 
@@ -25,14 +27,24 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.kai:kai:1.0.0'
+    implementation 'io.github.neuraquant:kai:1.0.0'
 }
+```
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.neuraquant</groupId>
+    <artifactId>kai</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
 ### Building from Source
 
 ```bash
-git clone https://github.com/yourusername/kai.git
+git clone https://github.com/NeuraQuant/kai.git
 cd kai
 ./gradlew build
 ./gradlew publishToMavenLocal
@@ -450,6 +462,17 @@ kai/
 - **Zero Boilerplate**: No unnecessary abstractions or config classes
 - **Extensible**: Easy to add custom clients, tools, and behaviors
 - **Lightweight**: Minimal dependencies, fast compilation
+
+## Publishing
+
+This library is automatically published to Maven Central (Sonatype Central) whenever changes are pushed to the main branch. The publishing process includes:
+
+- ✅ Automatic versioning and artifact signing
+- ✅ GPG signature verification for security
+- ✅ Staging repository management
+- ✅ Automatic release to Maven Central
+
+For details on the publishing setup, see [SONATYPE_SETUP.md](SONATYPE_SETUP.md).
 
 ## License
 

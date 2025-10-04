@@ -46,7 +46,7 @@ echo "4. Publishing to local Maven..."
 ./gradlew publishToMavenLocal --quiet
 if [ $? -eq 0 ]; then
     echo "   ✅ Published to local Maven repository"
-    echo "   📍 Location: ~/.m2/repository/io/kai/kai/1.0.0/"
+    echo "   📍 Location: ~/.m2/repository/io/github/neuraquant/kai/1.0.0/"
 else
     echo "   ❌ Publishing failed"
     exit 1
@@ -66,7 +66,7 @@ echo "The Kai library is ready to use!"
 echo ""
 echo "Quick start:"
 echo "  1. Add to your build.gradle.kts:"
-echo "     implementation(\"io.kai:kai:1.0.0\")"
+echo "     implementation(\"io.github.neuraquant:kai:1.0.0\")"
 echo ""
 echo "  2. Create an agent:"
 echo "     val agent = Agent(LmStudioClient())"
