@@ -77,8 +77,18 @@ The GitHub Actions workflow (`/.github/workflows/publish.yml`) performs:
 1. **Checkout**: Gets the latest code
 2. **Setup Java 17**: Configures the Java environment
 3. **Cache Dependencies**: Caches Gradle dependencies for faster builds
-4. **Import GPG Key**: Imports the signing key from GitHub secrets
-5. **Publish**: Publishes to Sonatype Central and automatically closes/releases the staging repository
+4. **Version Validation**: Checks Maven Central to prevent overwriting existing releases
+5. **Import GPG Key**: Imports the signing key from GitHub secrets
+6. **Publish**: Publishes to Sonatype Central and automatically closes/releases the staging repository
+
+### Version Protection
+
+The workflow includes multiple layers of protection:
+
+- **Pre-publish Validation**: Checks if version already exists in Maven Central
+- **Semantic Versioning**: Ensures proper version format
+- **SNAPSHOT Handling**: Allows overwriting of development versions
+- **Automatic Failure**: Stops publishing if version conflicts are detected
 
 ## Build Configuration
 

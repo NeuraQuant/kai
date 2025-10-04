@@ -34,6 +34,13 @@ jobs:
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
     
+    - name: Check version compatibility
+      run: |
+        echo "🔍 Checking if version can be safely published..."
+        # Run both the shell script and Gradle task for comprehensive checking
+        ./scripts/check-version.sh
+        ./gradlew validateVersion
+    
     - name: Import GPG key
       id: import_gpg
       uses: crazy-max/ghaction-import-gpg@v6

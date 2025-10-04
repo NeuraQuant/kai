@@ -11,6 +11,53 @@ plugins {
 group = "io.github.neuraquant"
 version = "1.0.0"
 
+// Version validation to prevent overwriting existing releases
+tasks.register("validateVersion") {
+    doLast {
+        val currentVersion = project.version.toString()
+        
+        // Check if version is SNAPSHOT (allowed to be overwritten)
+        if (currentVersion.endsWith("-SNAPSHOT")) {
+            println("✅ SNAPSHOT version detected - overwriting is allowed")
+            return@doLast
+        }
+        
+        // For release versions, check if they already exist
+        val groupPath = group.toString().replace(".", "/")
+        val mavenCentralUrl = "https://repo1.maven.org/maven2/$groupPath/$name/$currentVersion"
+        
+        try {
+            val connection = java.net.URL(mavenCentralUrl).openConnection()
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            
+            val responseCode = (connection as java.net.HttpURLConnection).responseCode
+            if (responseCode == 200) {
+                throw GradleException("""
+                    ❌ Version $currentVersion already exists in Maven Central!
+                    URL: $mavenCentralUrl
+                    
+                    To fix this:
+                    1. Update the version in build.gradle.kts
+                    2. Use ./scripts/bump-version.sh to increment version
+                    3. Or use a SNAPSHOT version for development
+                """.trimIndent())
+            } else {
+                println("✅ Version $currentVersion is safe to publish")
+            }
+        } catch (e: java.net.ConnectException) {
+            println("⚠️  Could not check Maven Central (network issue) - proceeding with caution")
+        } catch (e: Exception) {
+            if (e !is GradleException) {
+                println("⚠️  Could not validate version - proceeding with caution")
+            } else {
+                throw e
+            }
+        }
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -81,6 +128,15 @@ nexusPublishing {
             password.set(project.findProperty("sonatypePassword") as String?)
         }
     }
+}
+
+// Make publishing tasks depend on version validation
+tasks.named("publishToSonatype") {
+    dependsOn("validateVersion")
+}
+
+tasks.named("publish") {
+    dependsOn("validateVersion")
 }
 
 signing {

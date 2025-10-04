@@ -467,12 +467,31 @@ kai/
 
 This library is automatically published to Maven Central (Sonatype Central) whenever changes are pushed to the main branch. The publishing process includes:
 
-- ✅ Automatic versioning and artifact signing
-- ✅ GPG signature verification for security
-- ✅ Staging repository management
-- ✅ Automatic release to Maven Central
+- ✅ **Version Protection**: Prevents overwriting existing releases
+- ✅ **Automatic Validation**: Checks Maven Central before publishing
+- ✅ **Semantic Versioning**: Enforces proper version numbering
+- ✅ **GPG Signing**: Secure artifact signing and verification
+- ✅ **Staging Management**: Automatic staging repository handling
+- ✅ **Release Automation**: One-click release to Maven Central
 
-For details on the publishing setup, see [SONATYPE_SETUP.md](SONATYPE_SETUP.md).
+### Version Management
+
+Use the built-in version management tools:
+
+```bash
+# Increment patch version (1.0.0 -> 1.0.1)
+./scripts/bump-version.sh patch
+
+# Create development snapshot
+./scripts/bump-version.sh snapshot
+
+# Check version compatibility
+./scripts/check-version.sh
+```
+
+For complete details, see:
+- [SONATYPE_SETUP.md](SONATYPE_SETUP.md) - Publishing setup
+- [VERSIONING.md](VERSIONING.md) - Version management guide
 
 ## License
 
