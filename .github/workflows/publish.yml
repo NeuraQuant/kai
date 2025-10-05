@@ -76,14 +76,19 @@ jobs:
           echo "✅ OSSRH_PASSWORD secret is present"
         fi
         
-        # Validate SIGNING_KEY format (should be base64)
-        if ! echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
-          echo "❌ ERROR: SIGNING_KEY is not valid base64"
-          echo "   Please ensure your GPG private key is properly base64 encoded"
-          echo "   You can encode it with: gpg --armor --export-secret-keys <key-id> | base64 -w 0"
-          exit 1
+        # Validate SIGNING_KEY format (check if it's base64 or raw GPG key)
+        if echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
+          echo "✅ SIGNING_KEY is base64 encoded"
+        elif echo "${{ secrets.SIGNING_KEY }}" | grep -q "BEGIN PGP PRIVATE KEY BLOCK"; then
+          echo "✅ SIGNING_KEY is raw GPG key format"
         else
-          echo "✅ SIGNING_KEY is valid base64 format"
+          echo "❌ ERROR: SIGNING_KEY format is invalid"
+          echo "   The key should be either:"
+          echo "   1. Base64 encoded GPG key"
+          echo "   2. Raw GPG key starting with '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
+          echo "   For base64: gpg --armor --export-secret-keys <key-id> | base64 -w 0"
+          echo "   For raw: gpg --armor --export-secret-keys <key-id>"
+          exit 1
         fi
         
         echo "🎉 All secrets validation passed!"
@@ -91,7 +96,14 @@ jobs:
     - name: Configure in-memory signing
       run: |
         echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> "$GITHUB_ENV"
-        echo "${{ secrets.SIGNING_KEY }}" | base64 --decode >> "$GITHUB_ENV"
+        # Check if key is base64 encoded or raw GPG key
+        if echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
+          echo "🔓 Decoding base64 encoded GPG key..."
+          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode >> "$GITHUB_ENV"
+        else
+          echo "📝 Using raw GPG key format..."
+          echo "${{ secrets.SIGNING_KEY }}" >> "$GITHUB_ENV"
+        fi
         echo >> "$GITHUB_ENV"
         echo "EOF" >> "$GITHUB_ENV"
         {
