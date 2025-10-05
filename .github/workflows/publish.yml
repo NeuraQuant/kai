@@ -32,6 +32,62 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
         
+    - name: Validate required secrets
+      run: |
+        echo "🔍 Validating required secrets..."
+        
+        # Check SIGNING_KEY
+        if [ -z "${{ secrets.SIGNING_KEY }}" ]; then
+          echo "❌ ERROR: SIGNING_KEY secret is missing or empty"
+          echo "   Please add the SIGNING_KEY secret to your repository settings"
+          echo "   This should be your GPG private key in base64 format"
+          exit 1
+        else
+          echo "✅ SIGNING_KEY secret is present"
+        fi
+        
+        # Check SIGNING_PASSWORD
+        if [ -z "${{ secrets.SIGNING_PASSWORD }}" ]; then
+          echo "❌ ERROR: SIGNING_PASSWORD secret is missing or empty"
+          echo "   Please add the SIGNING_PASSWORD secret to your repository settings"
+          echo "   This should be the password for your GPG private key"
+          exit 1
+        else
+          echo "✅ SIGNING_PASSWORD secret is present"
+        fi
+        
+        # Check OSSRH_USERNAME
+        if [ -z "${{ secrets.OSSRH_USERNAME }}" ]; then
+          echo "❌ ERROR: OSSRH_USERNAME secret is missing or empty"
+          echo "   Please add the OSSRH_USERNAME secret to your repository settings"
+          echo "   This should be your Sonatype/OSSRH username"
+          exit 1
+        else
+          echo "✅ OSSRH_USERNAME secret is present"
+        fi
+        
+        # Check OSSRH_PASSWORD
+        if [ -z "${{ secrets.OSSRH_PASSWORD }}" ]; then
+          echo "❌ ERROR: OSSRH_PASSWORD secret is missing or empty"
+          echo "   Please add the OSSRH_PASSWORD secret to your repository settings"
+          echo "   This should be your Sonatype/OSSRH password or token"
+          exit 1
+        else
+          echo "✅ OSSRH_PASSWORD secret is present"
+        fi
+        
+        # Validate SIGNING_KEY format (should be base64)
+        if ! echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
+          echo "❌ ERROR: SIGNING_KEY is not valid base64"
+          echo "   Please ensure your GPG private key is properly base64 encoded"
+          echo "   You can encode it with: gpg --armor --export-secret-keys <key-id> | base64 -w 0"
+          exit 1
+        else
+          echo "✅ SIGNING_KEY is valid base64 format"
+        fi
+        
+        echo "🎉 All secrets validation passed!"
+        
     - name: Configure in-memory signing
       run: |
         echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> "$GITHUB_ENV"
