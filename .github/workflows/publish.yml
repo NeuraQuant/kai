@@ -8,6 +8,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     
     steps:
     - name: Checkout code
@@ -18,6 +21,12 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        
+    - name: Verify Java version
+      run: |
+        echo "☕ Java version:"
+        java -version
+        echo "📋 JAVA_HOME: $JAVA_HOME"
         
     - name: Cache Gradle packages
       uses: actions/cache@v4
@@ -31,6 +40,13 @@ jobs:
           
     - name: Make gradlew executable
       run: chmod +x ./gradlew
+      
+    - name: Verify Gradle wrapper
+      run: |
+        echo "🔧 Gradle wrapper info:"
+        ./gradlew --version
+        echo "📁 Gradle wrapper files:"
+        ls -la gradle/wrapper/
         
     - name: Validate required secrets
       run: |
@@ -92,28 +108,56 @@ jobs:
         fi
         
         echo "🎉 All secrets validation passed!"
+        echo "📋 Secrets summary:"
+        echo "  - SIGNING_KEY: ${#SIGNING_KEY} characters"
+        echo "  - SIGNING_PASSWORD: ${#SIGNING_PASSWORD} characters"
+        echo "  - OSSRH_USERNAME: ${#OSSRH_USERNAME} characters"
+        echo "  - OSSRH_PASSWORD: ${#OSSRH_PASSWORD} characters"
         
     - name: Configure in-memory signing
       run: |
-        echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> "$GITHUB_ENV"
         # Check if key is base64 encoded or raw GPG key
         if echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
           echo "🔓 Decoding base64 encoded GPG key..."
-          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode >> "$GITHUB_ENV"
+          SIGNING_KEY_CONTENT=$(echo "${{ secrets.SIGNING_KEY }}" | base64 --decode)
         else
           echo "📝 Using raw GPG key format..."
-          echo "${{ secrets.SIGNING_KEY }}" >> "$GITHUB_ENV"
+          SIGNING_KEY_CONTENT="${{ secrets.SIGNING_KEY }}"
         fi
-        echo >> "$GITHUB_ENV"
-        echo "EOF" >> "$GITHUB_ENV"
+        
+        # Set environment variables
         {
+          echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF"
+          echo "$SIGNING_KEY_CONTENT"
+          echo "EOF"
           echo "ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=${{ secrets.SIGNING_PASSWORD }}"
           echo "ORG_GRADLE_PROJECT_mavenCentralUsername=${{ secrets.OSSRH_USERNAME }}"
           echo "ORG_GRADLE_PROJECT_mavenCentralPassword=${{ secrets.OSSRH_PASSWORD }}"
         } >> "$GITHUB_ENV"
         
+        echo "✅ Environment variables configured successfully"
+        
     - name: Run tests
-      run: ./gradlew test
+      run: |
+        echo "🧪 Running tests..."
+        ./gradlew test --info
       
     - name: Publish and release to Maven Central
-      run: ./gradlew publishAllPublicationsToMavenCentralRepository closeAndReleaseRepository
+      run: |
+        echo "🚀 Starting Maven Central publishing process..."
+        echo "📋 Available environment variables:"
+        echo "  - ORG_GRADLE_PROJECT_mavenCentralUsername: ${ORG_GRADLE_PROJECT_mavenCentralUsername:+SET}"
+        echo "  - ORG_GRADLE_PROJECT_mavenCentralPassword: ${ORG_GRADLE_PROJECT_mavenCentralPassword:+SET}"
+        echo "  - ORG_GRADLE_PROJECT_signingInMemoryKey: ${ORG_GRADLE_PROJECT_signingInMemoryKey:+SET}"
+        echo "  - ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${ORG_GRADLE_PROJECT_signingInMemoryKeyPassword:+SET}"
+        
+        echo "🔍 Checking Gradle properties:"
+        ./gradlew properties | grep -E "(mavenCentral|signing)" || echo "No mavenCentral or signing properties found"
+        
+        echo "📦 Publishing to Maven Central..."
+        ./gradlew publishAllPublicationsToMavenCentralRepository --info --stacktrace
+        
+        echo "🚀 Closing and releasing repository..."
+        ./gradlew closeAndReleaseRepository --info --stacktrace
+        
+        echo "✅ Publishing completed successfully!"
