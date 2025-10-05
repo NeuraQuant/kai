@@ -1,0 +1,67 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+      
+    - name: Decode GPG key
+      run: |
+        echo "${{ secrets.SIGNING_KEY }}" | base64 --decode | gpg --import --batch --yes
+        
+    - name: Get GPG key ID
+      id: gpg-key-id
+      run: |
+        echo "keyid=$(gpg --list-secret-keys --keyid-format=long | grep sec | head -1 | awk '{print $2}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+        
+    - name: Configure Gradle for publishing
+      run: |
+        echo "ossrhUsername=${{ secrets.OSSRH_USERNAME }}" >> gradle.properties
+        echo "ossrhPassword=${{ secrets.OSSRH_PASSWORD }}" >> gradle.properties
+        echo "signing.keyId=${{ steps.gpg-key-id.outputs.keyid }}" >> gradle.properties
+        echo "signing.password=${{ secrets.SIGNING_PASSWORD }}" >> gradle.properties
+        echo "signing.secretKeyRingFile=$HOME/.gnupg/secring.gpg" >> gradle.properties
+        
+    - name: Run tests
+      run: ./gradlew test
+      
+    - name: Publish to Maven Central
+      run: ./gradlew publishAllPublicationsToMavenCentralRepository
+      env:
+        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        
+    - name: Close and release repository
+      run: ./gradlew closeAndReleaseRepository
+      env:
+        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
