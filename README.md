@@ -17,7 +17,7 @@ Kai is a minimal, elegant library for building and managing AI agents in Kotlin.
 
 ```kotlin
 dependencies {
-    implementation("io.kai:kai:1.0.0")
+    implementation("io.github.neuraquant:kai:1.0.0")
 }
 ```
 
@@ -25,18 +25,43 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.kai:kai:1.0.0'
+    implementation 'io.github.neuraquant:kai:1.0.0'
 }
+```
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.neuraquant</groupId>
+    <artifactId>kai</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
 ### Building from Source
 
 ```bash
-git clone https://github.com/yourusername/kai.git
+git clone https://github.com/NeuraQuant/kai.git
 cd kai
 ./gradlew build
 ./gradlew publishToMavenLocal
 ```
+
+## Publishing
+
+This library is automatically published to Maven Central on every merge to the main branch using GitHub Actions. The publishing process includes:
+
+- **Automated Testing**: All tests must pass before publishing
+- **GPG Signing**: All artifacts are signed with our GPG key
+- **Maven Central**: Published to `io.github.neuraquant:kai`
+- **Version Management**: Versions are managed through the `version` property in `build.gradle.kts`
+
+### Available on Maven Central
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.neuraquant/kai.svg)](https://search.maven.org/artifact/io.github.neuraquant/kai)
+
+The library is available at: https://search.maven.org/artifact/io.github.neuraquant/kai
 
 ## Quick Start
 
@@ -451,6 +476,43 @@ kai/
 - **Extensible**: Easy to add custom clients, tools, and behaviors
 - **Lightweight**: Minimal dependencies, fast compilation
 
+## CI/CD
+
+This project uses GitHub Actions for automated publishing to Maven Central:
+
+- **Trigger**: Automatically runs on every push to the `main` branch
+- **Testing**: Runs all tests before publishing
+- **Signing**: GPG signs all artifacts using organization secrets
+- **Publishing**: Publishes to Maven Central (Sonatype S01)
+- **Release**: Automatically closes and releases the repository
+
+### Workflow Details
+
+The publishing workflow (`.github/workflows/publish.yml`) handles:
+- JDK 17 setup and Gradle caching
+- GPG key import and configuration
+- Sonatype credentials management
+- Automated testing and validation
+- Maven Central publishing and release
+
+### Required Secrets
+
+The following secrets must be configured in the GitHub organization:
+- `OSSRH_USERNAME`: Sonatype username
+- `OSSRH_PASSWORD`: Sonatype password/token
+- `SIGNING_KEY`: GPG private key (base64 encoded)
+- `SIGNING_PASSWORD`: GPG key passphrase
+
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) file for details
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+The library will be automatically published to Maven Central once your changes are merged to the main branch.
