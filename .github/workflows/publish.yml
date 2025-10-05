@@ -50,7 +50,7 @@ jobs:
       run: ./gradlew test
       
     - name: Publish to Maven Central
-      run: ./gradlew publishAllPublicationsToMavenCentralRepository
+      run: ./gradlew publishToMavenCentral
         
     - name: Close and release repository
       run: ./gradlew closeAndReleaseRepository
