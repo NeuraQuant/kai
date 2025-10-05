@@ -114,8 +114,10 @@ jobs:
         echo "  - OSSRH_USERNAME: ${#OSSRH_USERNAME} characters"
         echo "  - OSSRH_PASSWORD: ${#OSSRH_PASSWORD} characters"
         
-    - name: Configure in-memory signing
+    - name: Validate GPG signing credentials
       run: |
+        echo "🔐 Validating GPG signing credentials..."
+        
         # Check if key is base64 encoded or raw GPG key
         if echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
           echo "🔓 Decoding base64 encoded GPG key..."
@@ -124,6 +126,84 @@ jobs:
           echo "📝 Using raw GPG key format..."
           SIGNING_KEY_CONTENT="${{ secrets.SIGNING_KEY }}"
         fi
+        
+        # Import GPG key to verify it's valid
+        echo "$SIGNING_KEY_CONTENT" | gpg --batch --import 2>&1 | tee /tmp/gpg_import.log
+        
+        if [ ${PIPESTATUS[1]} -ne 0 ]; then
+          echo "❌ ERROR: Failed to import GPG signing key"
+          echo "   The SIGNING_KEY secret appears to be invalid or corrupted"
+          echo "   Please verify:"
+          echo "   1. The key was exported correctly: gpg --armor --export-secret-keys <key-id>"
+          echo "   2. If base64 encoded, it was encoded correctly: ... | base64 -w 0"
+          cat /tmp/gpg_import.log
+          exit 1
+        fi
+        
+        # Get the key ID that was imported
+        GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep -A 1 "^sec" | tail -1 | awk '{print $1}')
+        
+        if [ -z "$GPG_KEY_ID" ]; then
+          echo "❌ ERROR: No GPG key found after import"
+          exit 1
+        fi
+        
+        echo "✅ GPG key imported successfully (Key ID: $GPG_KEY_ID)"
+        
+        # Test signing with the password
+        echo "test" | gpg --batch --yes --passphrase "${{ secrets.SIGNING_PASSWORD }}" --pinentry-mode loopback --default-key "$GPG_KEY_ID" --clearsign > /dev/null 2>&1
+        
+        if [ $? -ne 0 ]; then
+          echo "❌ ERROR: Failed to sign test data with SIGNING_PASSWORD"
+          echo "   The SIGNING_PASSWORD secret appears to be incorrect"
+          echo "   Please verify the password matches the one used when creating the GPG key"
+          exit 1
+        fi
+        
+        echo "✅ GPG signing test successful with provided password"
+        
+        # Store the signing key content for later use
+        echo "SIGNING_KEY_CONTENT<<EOF" >> "$GITHUB_ENV"
+        echo "$SIGNING_KEY_CONTENT" >> "$GITHUB_ENV"
+        echo "EOF" >> "$GITHUB_ENV"
+        
+    - name: Validate Maven Central credentials
+      run: |
+        echo "🔐 Validating Maven Central credentials..."
+        
+        # Test authentication to Sonatype OSSRH (S01)
+        RESPONSE=$(curl -s -w "\n%{http_code}" -u "${{ secrets.OSSRH_USERNAME }}:${{ secrets.OSSRH_PASSWORD }}" \
+          "https://s01.oss.sonatype.org/service/local/authentication/login")
+        
+        HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+        BODY=$(echo "$RESPONSE" | head -n -1)
+        
+        if [ "$HTTP_CODE" = "401" ]; then
+          echo "❌ ERROR: Maven Central authentication failed (HTTP 401 Unauthorized)"
+          echo "   Either OSSRH_USERNAME or OSSRH_PASSWORD is incorrect"
+          echo "   Please verify:"
+          echo "   1. You're using a User Token (not your login password)"
+          echo "   2. Generate a token at: https://s01.oss.sonatype.org/#profile;User%20Token"
+          echo "   3. The token hasn't been revoked or expired"
+          echo ""
+          echo "   Username provided: ${{ secrets.OSSRH_USERNAME }}"
+          exit 1
+        elif [ "$HTTP_CODE" = "403" ]; then
+          echo "❌ ERROR: Maven Central authentication forbidden (HTTP 403)"
+          echo "   The credentials may be valid but lack necessary permissions"
+          echo "   Please verify your account has publishing rights for io.github.neuraquant"
+          exit 1
+        elif [ "$HTTP_CODE" != "200" ]; then
+          echo "⚠️  WARNING: Unexpected response from Maven Central (HTTP $HTTP_CODE)"
+          echo "   Response: $BODY"
+          echo "   Continuing anyway, but publish may fail..."
+        else
+          echo "✅ Maven Central authentication successful"
+        fi
+        
+    - name: Configure publishing environment
+      run: |
+        echo "📋 Setting up environment variables for publishing..."
         
         # Set environment variables
         {
@@ -135,14 +215,14 @@ jobs:
           echo "ORG_GRADLE_PROJECT_mavenCentralPassword=${{ secrets.OSSRH_PASSWORD }}"
         } >> "$GITHUB_ENV"
         
-        echo "✅ Environment variables configured successfully"
+        echo "✅ Publishing environment configured successfully"
         
     - name: Run tests
       run: |
         echo "🧪 Running tests..."
         ./gradlew test --info
       
-    - name: Publish and release to Maven Central
+    - name: Publish to Maven Central
       run: |
         echo "🚀 Starting Maven Central publishing process..."
         echo "📋 Available environment variables:"
@@ -154,7 +234,30 @@ jobs:
         echo "🔍 Checking Gradle properties:"
         ./gradlew properties | grep -E "(mavenCentral|signing)" || echo "No mavenCentral or signing properties found"
         
-        echo "📦 Publishing to Maven Central..."
-        ./gradlew publishAllPublicationsToMavenCentralRepository --info --stacktrace
+        echo "📦 Publishing and releasing to Maven Central..."
+        if ! ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache --info --stacktrace 2>&1 | tee /tmp/publish.log; then
+          echo ""
+          echo "❌ Publishing failed! Analyzing error..."
+          echo ""
+          
+          # Check for common credential-related errors
+          if grep -qE "401|Unauthorized|Authentication failed" /tmp/publish.log; then
+            echo "🔍 Detected authentication failure:"
+            echo "   - Maven Central credentials (OSSRH_USERNAME/OSSRH_PASSWORD) may be incorrect"
+            echo "   - Token may have expired or been revoked"
+            echo "   - Verify credentials at: https://s01.oss.sonatype.org"
+          elif grep -qiE "(signing|gpg|PGP|key).*(fail|error)" /tmp/publish.log; then
+            echo "🔍 Detected signing failure:"
+            echo "   - GPG signing key (SIGNING_KEY) may be invalid"
+            echo "   - GPG password (SIGNING_PASSWORD) may be incorrect"
+            echo "   - Key may not match the password"
+          elif grep -qE "403|Forbidden" /tmp/publish.log; then
+            echo "🔍 Detected authorization failure:"
+            echo "   - Your account may lack permission to publish to io.github.neuraquant"
+            echo "   - Verify namespace ownership at: https://s01.oss.sonatype.org"
+          fi
+          
+          exit 1
+        fi
         
         echo "✅ Publishing completed successfully!"
