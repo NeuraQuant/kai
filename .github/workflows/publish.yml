@@ -44,8 +44,5 @@ jobs:
     - name: Run tests
       run: ./gradlew test
       
-    - name: Publish to Maven Central
-      run: ./gradlew publishToMavenCentral
-        
-    - name: Close and release repository
-      run: ./gradlew closeAndReleaseRepository
+    - name: Publish and release to Maven Central
+      run: ./gradlew publishAndReleaseToMavenCentral
