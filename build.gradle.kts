@@ -44,8 +44,8 @@ mavenPublishing {
     
     pom {
         name.set("Kai")
-        description.set("Lightweight utility library for structuring and managing Agentic AI agents")
-        inceptionYear.set("2024")
+        description.set("Lightweight Kotlin utility library for structuring and managing Agentic AI")
+        inceptionYear.set("2025")
         url.set("https://github.com/NeuraQuant/kai")
         
         licenses {
