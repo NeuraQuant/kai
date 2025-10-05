@@ -118,24 +118,24 @@ jobs:
       run: |
         echo "🔐 Validating GPG signing credentials..."
         
-        # Check if key is base64 encoded or raw GPG key
-        if echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > /dev/null 2>&1; then
-          echo "🔓 Decoding base64 encoded GPG key..."
-          SIGNING_KEY_CONTENT=$(echo "${{ secrets.SIGNING_KEY }}" | base64 --decode)
-        else
+        # Check if key is raw GPG key (starts with PGP header) or base64 encoded
+        if echo "${{ secrets.SIGNING_KEY }}" | grep -q "BEGIN PGP PRIVATE KEY BLOCK"; then
           echo "📝 Using raw GPG key format..."
           SIGNING_KEY_CONTENT="${{ secrets.SIGNING_KEY }}"
+        else
+          echo "🔓 Decoding base64 encoded GPG key..."
+          SIGNING_KEY_CONTENT=$(echo "${{ secrets.SIGNING_KEY }}" | base64 --decode)
         fi
         
         # Import GPG key to verify it's valid
-        echo "$SIGNING_KEY_CONTENT" | gpg --batch --import 2>&1 | tee /tmp/gpg_import.log
-        
-        if [ ${PIPESTATUS[1]} -ne 0 ]; then
+        if ! echo "$SIGNING_KEY_CONTENT" | gpg --batch --import 2>&1 | tee /tmp/gpg_import.log; then
           echo "❌ ERROR: Failed to import GPG signing key"
           echo "   The SIGNING_KEY secret appears to be invalid or corrupted"
           echo "   Please verify:"
           echo "   1. The key was exported correctly: gpg --armor --export-secret-keys <key-id>"
           echo "   2. If base64 encoded, it was encoded correctly: ... | base64 -w 0"
+          echo ""
+          echo "GPG import output:"
           cat /tmp/gpg_import.log
           exit 1
         fi
