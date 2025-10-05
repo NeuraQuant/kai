@@ -26,12 +26,12 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "21"
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     // Don't create sources jar here as we'll use kotlinSourcesJar instead
 }
 
@@ -79,5 +79,10 @@ afterEvaluate {
     tasks.named("generateMetadataFileForMavenPublication") {
         dependsOn("kotlinSourcesJar")
     }
+}
+
+// Ensure proper task ordering for publishing
+tasks.named("publishAllPublicationsToMavenCentralRepository") {
+    dependsOn("test")
 }
 
