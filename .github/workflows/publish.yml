@@ -241,17 +241,17 @@ jobs:
           echo ""
           
           # Check for common credential-related errors
-          if grep -q "401\|Unauthorized\|Authentication failed" /tmp/publish.log; then
+          if grep -qE "401|Unauthorized|Authentication failed" /tmp/publish.log; then
             echo "🔍 Detected authentication failure:"
             echo "   - Maven Central credentials (OSSRH_USERNAME/OSSRH_PASSWORD) may be incorrect"
             echo "   - Token may have expired or been revoked"
             echo "   - Verify credentials at: https://s01.oss.sonatype.org"
-          elif grep -q "signing\|gpg\|PGP\|key" /tmp/publish.log | grep -i "fail\|error"; then
+          elif grep -qiE "(signing|gpg|PGP|key).*(fail|error)" /tmp/publish.log; then
             echo "🔍 Detected signing failure:"
             echo "   - GPG signing key (SIGNING_KEY) may be invalid"
             echo "   - GPG password (SIGNING_PASSWORD) may be incorrect"
             echo "   - Key may not match the password"
-          elif grep -q "403\|Forbidden" /tmp/publish.log; then
+          elif grep -qE "403|Forbidden" /tmp/publish.log; then
             echo "🔍 Detected authorization failure:"
             echo "   - Your account may lack permission to publish to io.github.neuraquant"
             echo "   - Verify namespace ownership at: https://s01.oss.sonatype.org"
