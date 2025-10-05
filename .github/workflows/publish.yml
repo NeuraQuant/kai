@@ -157,4 +157,7 @@ jobs:
         echo "📦 Publishing to Maven Central..."
         ./gradlew publishAllPublicationsToMavenCentralRepository --info --stacktrace
         
+        echo "🚀 Closing and releasing repository..."
+        ./gradlew closeAndReleaseRepository --info --stacktrace
+        
         echo "✅ Publishing completed successfully!"
