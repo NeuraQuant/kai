@@ -116,4 +116,4 @@ jobs:
       run: ./gradlew test
       
     - name: Publish and release to Maven Central
-      run: ./gradlew publishAndReleaseToMavenCentral
+      run: ./gradlew publishAllPublicationsToMavenCentralRepository closeAndReleaseRepository
