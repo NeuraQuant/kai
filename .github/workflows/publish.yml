@@ -32,11 +32,6 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
         
-    - name: Configure Gradle for publishing
-      run: |
-        echo "ossrhUsername=${{ secrets.OSSRH_USERNAME }}" >> gradle.properties
-        echo "ossrhPassword=${{ secrets.OSSRH_PASSWORD }}" >> gradle.properties
-
     - name: Configure in-memory signing
       run: |
         echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> $GITHUB_ENV
