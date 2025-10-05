@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.serialization") version "1.9.22"
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.25.3"
 }
 
-group = "io.kai"
+group = "io.github.neuraquant"
 version = "1.0.0"
 
 repositories {
@@ -35,30 +35,38 @@ java {
     withSourcesJar()
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            
-            pom {
-                name.set("Kai")
-                description.set("Lightweight utility library for structuring and managing Agentic AI agents")
-                url.set("https://github.com/NeuraQuant/kai")
-                
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
+mavenPublishing {
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01, true)
+    
+    signAllPublications()
+    
+    coordinates("io.github.neuraquant", "kai", version.toString())
+    
+    pom {
+        name.set("Kai")
+        description.set("Lightweight Kotlin utility library for structuring and managing Agentic AI")
+        inceptionYear.set("2025")
+        url.set("https://github.com/NeuraQuant/kai")
+        
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
-    }
-    
-    repositories {
-        maven {
-            name = "local"
-            url = uri(layout.buildDirectory.dir("repo"))
+        
+        developers {
+            developer {
+                id.set("neuraquant")
+                name.set("NeuraQuant")
+                url.set("https://github.com/NeuraQuant")
+            }
+        }
+        
+        scm {
+            url.set("https://github.com/NeuraQuant/kai")
+            connection.set("scm:git:git://github.com/NeuraQuant/kai.git")
+            developerConnection.set("scm:git:ssh://git@github.com/NeuraQuant/kai.git")
         }
     }
 }
