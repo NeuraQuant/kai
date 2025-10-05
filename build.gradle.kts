@@ -32,13 +32,16 @@ tasks.withType<KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
+    // Don't create sources jar here as we'll use kotlinSourcesJar instead
 }
 
 mavenPublishing {
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01, true)
     
-    signAllPublications()
+    // Only sign if signing is configured (for CI/CD)
+    if (project.hasProperty("signingInMemoryKey")) {
+        signAllPublications()
+    }
     
     coordinates("io.github.neuraquant", "kai", version.toString())
     
@@ -70,3 +73,11 @@ mavenPublishing {
         }
     }
 }
+
+// Fix task dependency issue
+afterEvaluate {
+    tasks.named("generateMetadataFileForMavenPublication") {
+        dependsOn("kotlinSourcesJar")
+    }
+}
+
