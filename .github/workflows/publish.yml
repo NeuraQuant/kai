@@ -34,12 +34,14 @@ jobs:
         
     - name: Configure in-memory signing
       run: |
-        echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> $GITHUB_ENV
-        echo "${{ secrets.SIGNING_KEY }}" | base64 --decode >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-        echo "ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=${{ secrets.SIGNING_PASSWORD }}" >> $GITHUB_ENV
-        echo "ORG_GRADLE_PROJECT_mavenCentralUsername=${{ secrets.OSSRH_USERNAME }}" >> $GITHUB_ENV
-        echo "ORG_GRADLE_PROJECT_mavenCentralPassword=${{ secrets.OSSRH_PASSWORD }}" >> $GITHUB_ENV
+        {
+          echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF"
+          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode
+          echo "EOF"
+          echo "ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=${{ secrets.SIGNING_PASSWORD }}"
+          echo "ORG_GRADLE_PROJECT_mavenCentralUsername=${{ secrets.OSSRH_USERNAME }}"
+          echo "ORG_GRADLE_PROJECT_mavenCentralPassword=${{ secrets.OSSRH_PASSWORD }}"
+        } >> "$GITHUB_ENV"
         
     - name: Run tests
       run: ./gradlew test
