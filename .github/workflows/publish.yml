@@ -31,37 +31,26 @@ jobs:
           
     - name: Make gradlew executable
       run: chmod +x ./gradlew
-      
-    - name: Decode GPG key
-      run: |
-        echo "${{ secrets.SIGNING_KEY }}" | base64 --decode | gpg --import --batch --yes
-        
-    - name: Get GPG key ID
-      id: gpg-key-id
-      run: |
-        echo "keyid=$(gpg --list-secret-keys --keyid-format=long | grep sec | head -1 | awk '{print $2}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
         
     - name: Configure Gradle for publishing
       run: |
         echo "ossrhUsername=${{ secrets.OSSRH_USERNAME }}" >> gradle.properties
         echo "ossrhPassword=${{ secrets.OSSRH_PASSWORD }}" >> gradle.properties
-        echo "signing.keyId=${{ steps.gpg-key-id.outputs.keyid }}" >> gradle.properties
-        echo "signing.password=${{ secrets.SIGNING_PASSWORD }}" >> gradle.properties
-        echo "signing.secretKeyRingFile=$HOME/.gnupg/secring.gpg" >> gradle.properties
+
+    - name: Configure in-memory signing
+      run: |
+        echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<EOF" >> $GITHUB_ENV
+        echo "${{ secrets.SIGNING_KEY }}" | base64 --decode >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        echo "ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=${{ secrets.SIGNING_PASSWORD }}" >> $GITHUB_ENV
+        echo "ORG_GRADLE_PROJECT_mavenCentralUsername=${{ secrets.OSSRH_USERNAME }}" >> $GITHUB_ENV
+        echo "ORG_GRADLE_PROJECT_mavenCentralPassword=${{ secrets.OSSRH_PASSWORD }}" >> $GITHUB_ENV
         
     - name: Run tests
       run: ./gradlew test
       
     - name: Publish to Maven Central
       run: ./gradlew publishAllPublicationsToMavenCentralRepository
-      env:
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         
     - name: Close and release repository
       run: ./gradlew closeAndReleaseRepository
-      env:
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
