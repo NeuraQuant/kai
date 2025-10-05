@@ -142,7 +142,7 @@ jobs:
         echo "🧪 Running tests..."
         ./gradlew test --info
       
-    - name: Publish and release to Maven Central
+    - name: Publish to Maven Central
       run: |
         echo "🚀 Starting Maven Central publishing process..."
         echo "📋 Available environment variables:"
@@ -154,10 +154,7 @@ jobs:
         echo "🔍 Checking Gradle properties:"
         ./gradlew properties | grep -E "(mavenCentral|signing)" || echo "No mavenCentral or signing properties found"
         
-        echo "📦 Publishing to Maven Central..."
-        ./gradlew publishAllPublicationsToMavenCentralRepository --info --stacktrace
-        
-        echo "🚀 Closing and releasing repository..."
-        ./gradlew closeAndReleaseRepository --info --stacktrace
+        echo "📦 Publishing and releasing to Maven Central..."
+        ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache --info --stacktrace
         
         echo "✅ Publishing completed successfully!"
